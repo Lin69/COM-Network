@@ -130,10 +130,10 @@ class Frames:
 
     def deconstract_frame(self,frame):
         
-        if frame[0] != 'H' or frame[0] != 'I':
+        if frame[0] != 'H' and frame[0] != 'I':
             return (frame[0],)
         else:
-            return de_main_frame(frame)
+            return self.de_main_frame(frame)
 
 
 

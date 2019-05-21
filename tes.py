@@ -24,6 +24,7 @@ class SendingThread(threading.Thread):
 
         while self.alive:
             if self.is_sending:
+                print('started sending from manager')
                 self.i=0
                 is_sended=False
                 while self.i < len(self.manager.framelist):
@@ -64,9 +65,11 @@ class ReadingThread(threading.Thread):
         while self.alive:
             if self.is_reading:
                 self.message = self.manager.COMport.read()
-                if len(self.message)>0:
+                if len(self.message) > 0:
+                    print('msg:', self.message, len(self.message))
                     self.manager.making_answer(self.message)
                 time.sleep(1)
+        print('thread is not alive')
 
 class CheckConnection(threading.Thread):
 
@@ -94,7 +97,7 @@ class Manager:
         self.SendingThread = SendingThread(self)
         self.ReadingThread = ReadingThread(self)
         self.CheckingThread = CheckConnection(self)
-        self.is_connected = False
+        self.is_connected = True
         self.header = False
         self.headername =''
         self.infframes = []
@@ -155,8 +158,8 @@ class Manager:
             self.answer=True
         elif decoded_fr[0] == 'I': 
             self.infframes.append(decoded_fr[1])
-            self.manager.framelist.append('A')
-            self.manager.sending()
+            self.framelist.append('A')
+            self.sending()
         elif decoded_fr[0]=='H':
             if not self.header:
                 self.header = True
@@ -167,14 +170,14 @@ class Manager:
                 self.gotmessage = True
                 self.save_button['state'] = 'normal'
                 self.view_file.configure(state='normal')
-                self.view_file.delete(1.0, self.got_text)
-                self.view_file.insert(END, self)
+                self.view_file.delete(1.0, END)
+                self.view_file.insert(END, self.got_text)
                 self.view_file.configure(state='disabled')
             self.framelist.append('A')
-            self.manager.sending()
+            self.sending()
         else:
-            self.manager.framelist.append('N')
-            self.manager.sending()
+            self.framelist.append('N')
+            self.sending()
 
 
 
@@ -194,6 +197,7 @@ class Manager:
         except:
             pass
         self.ReadingThread.is_reading=True
+        print('set is_reading')
 
     def quit_threads(self):
 
@@ -248,7 +252,8 @@ class COMConnection:
         self.ser=serial.Serial()
         self.ser.baudrate=speed
         self.ser.port=dev_port
-        self.ser.write_timeout=self.ser.timeout=timeout
+        self.ser.write_timeout=timeout+5
+        self.ser.timeout=timeout
         if stopbits == 1:
             self.ser.stopbits = serial.STOPBITS_ONE
         elif stopbits == 1.5:
@@ -267,14 +272,15 @@ class COMConnection:
 
     def read(self):
 
-        line=b''
+        line=bytes()
         while self.ser.inWaiting() > 0:
-            line += self.ser.read()
-            line = line.decode("utf-8")
+            line += bytes(self.ser.read())  # let's read
+        line = line.decode("utf-8")
+        print('line after', line)
         return line
 
     def write(self,message):
-        
+        print('starting write msg:', message)
         self.ser.write(message.encode("utf-8"))
 
     def status(self):

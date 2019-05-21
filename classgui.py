@@ -7,6 +7,7 @@ from tkinter import filedialog
 # from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
 from tkinter.messagebox import showerror
+import time
 
 # from tes import Manager
 
@@ -344,6 +345,7 @@ class MainWindow(Frame):
                 self.stop_bits['state']='disabled'
                 self.is_port_opened = True
                 self.set_button.configure(text='Разорвать соединение')
+                time.sleep(5)
                 self.manager.framelist.append('L')
                 self.manager.sending()
             else:
